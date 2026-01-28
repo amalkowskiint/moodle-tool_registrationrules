@@ -166,9 +166,15 @@ class rule implements rule_interface, extend_signup_form, post_data_check, insta
     public function post_data_check(array $data): rule_check_result {
         global $SESSION;
 
-        // Decode base64 encoded JSON string from form data, if something goes wrong when deny with fallback points.
-        if (($base64 = base64_decode($data['registrationrule_altcha'])) && $payload = json_decode($base64)) {
-            $this->deny_with_fallback();
+        // Decode base64 encoded JSON string from form data, if something goes wrong then deny with fallback points.
+        $base64 = base64_decode($data['registrationrule_altcha'], true);
+        if ($base64 === false) {
+            return $this->deny_with_fallback();
+        }
+        
+        $payload = json_decode($base64);
+        if ($payload === null && json_last_error() !== JSON_ERROR_NONE) {
+            return $this->deny_with_fallback();
         }
 
         // Attempt to verify the solution, if something goes wrong when deny with fallback points.
